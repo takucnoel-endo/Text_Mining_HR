@@ -160,24 +160,23 @@ Match_skills <- function(skill_syn, corp){
 ```
 
 ## Main Script
+### Preliminary operations.
 ```r
 #Read data into R session.
 data <- read_excel('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/Parsed_data.xlsx')
-
 #Assign preliminary ID to document rows
 data$doc_id <- seq(nrow(data))
-
 #Rename summary columns name.
 #Use raw string.
 colnames(data)[which(names(data) ==
                        r"{\T\TSUMMARY}")] <- "SUMMARY"
-
-
+```
+### Data Ceaning
+#### Columns
+```r
 #The extraction code extracted EXPERIENCE,KNOWLEDGE, SKILLS, AND ABILITIES, and LICENSES/CERTIFICATIONS together. 
 #Parse these string to only collect KNOWLEDGE, SKILLS, AND ABILITIES. 
 data$KNOWLEDGESKILLSABILITIES<-gsub('LICENSES/CERTIFICATIONS.*', '', gsub('KNOWLEDGE, SKILLS, AND ABILITIES', '', str_extract(data$EXPERIENCE, "KNOWLEDGE, SKILLS, AND ABILITIES.*")))
-
-
 #Group columns by columns to be joined together, and columns that is not important for analysis.
 #Remove unnesessary features from the dataset.
 subset_vec <- c("CLASSIFICATION","REPORTSTO","PREPAREDDATE","OTHERREQUIREMENTS","SUPERVISORYRESPONSIBILITIES",
@@ -186,23 +185,17 @@ subset_vec <- c("CLASSIFICATION","REPORTSTO","PREPAREDDATE","OTHERREQUIREMENTS",
                 'FINANCIALRESPONSIBILITY','BUDGETRESPONSIBILITY','EQUIPMENT','ADDITIONALDUTIES','EDUCATION',
                 'EXPERIENCE','INTERACTION','COMPUTERSOFTWARE')
 data <- data[, !(colnames(data) %in% subset_vec)]
-
-
-
 #Remove all partial duplicated rows by Job Codes.
 data <- data %>% distinct(JOBCODE, .keep_all = TRUE)
-
-
-
 #Join columns together. 
 join_vec <- c('SUMMARY', 'JOBDUTIES','ADDITIONALDUTIES','EDUCATION','EXPERIENCE','INTERACTION','COMPUTERSOFTWARE',
               'EQUIPMENT','BUDGETRESPONSIBILITY','FINANCIALRESPONSIBILITY','PHYSICALREQUIREMENTS','KNOWLEDGESKILLSABILITIES')
-
 data$text <- data$KNOWLEDGESKILLSABILITIES
-
 #Get rid of text specific columns
 data <- data[, !(colnames(data) %in% join_vec)]
-
+```
+#### Text manipulations
+```r
 #Clean any formatting string with raw string expression.
 data$text<-gsub(r"{\xe2\x80\x99s}", "s", data$text,fixed = TRUE)
 data$text<-gsub(r"{\\xe2\\x80\\x99s}", "s", data$text,fixed = TRUE)
@@ -217,25 +210,30 @@ data$POSITION<-gsub(r"{\\xe2\\x80\\x93s }", "s", data$POSITION,fixed = TRUE)
 data$JOBCODE<-gsub("\\s*\\([^\\)]+\\)","",data$JOBCODE)
 data$JOBCODE<-gsub(r"{\\t}","",data$JOBCODE)
 data$JOBFAMILY<-gsub("REPORTS TO.*", "", data$JOBFAMILY)
+```
 
-
-
-
+### Corpus Preparation and Pre-processing
+#### Volatile Corpus
+```r
 #In R, you can specify that a data text is a corpus type, so tm package can recognize it.
 #Change the prepared data to corpus, for further preprocessing (Stop words, stemming ... etc)
 #Crete a DataFrame Source from the data.
 data_source <- DataframeSource(data)
 #Convert the source to volatile corpus
 corpus <- VCorpus(data_source)
-
-
+```
+#### Corpus Pre-processing
+```r
 #Standardization
 #Import dictionary of stop words from a file.
 stop_w <- pull(read_excel('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/stopwords.xlsx', col_names=FALSE))
 #Use the program defined function to standardize.
 corpus <- standardize(corpus, lemmatize=TRUE, stop_w)
+```
 
-
+### Exploratory Analysis
+#### Unigrams
+```r
 #Exploration
 #Unigram
 #Create Term-Document_Matrix and Document-Term-Matrix
@@ -246,8 +244,9 @@ print(dtfreq <- tidy(dtm1))
 #Count for the whole corpus the frequency of the word.
 #Use the program defined function to sort and output list as well as n most/least frequent words. 
 print(corpus_unifreq <- count_freq(as.matrix(tdm1), 'desc', 20))
-
-
+```
+#### Bigrams
+```r
 #Bigram
 #Build tokenizer function
 #Tokenizes into bigram
@@ -259,7 +258,9 @@ print(dtfreq <- tidy(dtm2))
 #Count for the whole corpus the frequency of the trigram.
 #Use the program defined function to sort and output list as well as n most/least frequent trigram. 
 print(corpus_bifreq <- count_freq(as.matrix(tdm2), 'desc', 20))
-
+```
+#### Trigrams
+```r
 #Trigram
 #Build tokenizer function
 #Tokenizes into trigram.
@@ -271,9 +272,9 @@ print(dtfreq <- tidy(dtm3))
 #Count for the whole corpus the frequency of the trigram.
 #Use the program defined function to sort and output list as well as n most/least frequent trigram. 
 print(corpus_trifreq <- count_freq(as.matrix(tdm3), 'desc', 20))
-
-
-
+```
+#### Combined n-grams
+```r
 #Combine all n-grams.
 #Build tokenizer function
 #Tokenizes into both unigram, and trigram.
@@ -285,7 +286,9 @@ print(dtfreq <- tidy(dtm1.3))
 print(corpus_unitotrifreq <- count_freq(as.matrix(tdm1.3), 'desc', 20))
 
 
-
+```
+#### Exploratory Topic Modeling
+```r
 dtm1_lda = dtm1[apply(dtm1 , 1, sum)>0, ] #remove all docs without words
 #Implement a Topic Model with Latent Dirichlet Allocation.
 set.seed(100)
@@ -293,10 +296,10 @@ set.seed(100)
 tm_model.1 = LDA(dtm1_lda,method='Gibbs',k=10,control=list(alpha=0.1))
 #Look a the model result.
 print(terms(tm_model.1, 10))
+```
 
-
-
-
+### Extracting Skills
+```r
 #Perform synonym mathing to the 35 skills
 syn = read_csv('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/Synonyms - Sheet1.csv')
 #Perform skills match.
@@ -304,9 +307,6 @@ SkillsDictionary = Match_skills(syn, corpus)
 #Export to excel
 write_xlsx(SkillsDictionary, 
            '/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Deliverables:Results/Skills_Dict.xlsx')
-
-
-
 #Terms that didnt march and its freq.
 difference = setdiff(names(sort(rowSums(as.matrix(tdm1)), decreasing=TRUE)),
                      unique(c(t(SkillsDictionary))[!is.na(c(t(SkillsDictionary)))]))
