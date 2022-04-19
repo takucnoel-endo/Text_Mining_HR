@@ -166,14 +166,14 @@ Match_skills <- function(skill_syn, corp){
 data <- read_excel('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/Parsed_data.xlsx')
 #Assign preliminary ID to document rows
 data$doc_id <- seq(nrow(data))
-#Rename summary columns name.
-#Use raw string.
-colnames(data)[which(names(data) ==
-                       r"{\T\TSUMMARY}")] <- "SUMMARY"
 ```
 ### Data Ceaning
 #### Columns
 ```r
+#Rename summary columns name.
+#Use raw string.
+colnames(data)[which(names(data) ==
+                       r"{\T\TSUMMARY}")] <- "SUMMARY"
 #The extraction code extracted EXPERIENCE,KNOWLEDGE, SKILLS, AND ABILITIES, and LICENSES/CERTIFICATIONS together. 
 #Parse these string to only collect KNOWLEDGE, SKILLS, AND ABILITIES. 
 data$KNOWLEDGESKILLSABILITIES<-gsub('LICENSES/CERTIFICATIONS.*', '', gsub('KNOWLEDGE, SKILLS, AND ABILITIES', '', str_extract(data$EXPERIENCE, "KNOWLEDGE, SKILLS, AND ABILITIES.*")))
