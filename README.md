@@ -169,6 +169,7 @@ data$doc_id <- seq(nrow(data))
 ```
 ### Data Ceaning
 #### Columns
+First, I worked with the columns of the raw data. Here, I renamed a column and removed columns that are unnessesary for this analyis. The unnessesary columns were determined by its nature of repetitiveness and by its lack of information that it provides to the analysis itself. For example, columns such as `COMPUTER SOFTWARE` was removed, because for most jobs, it contains only Microsoft products. Finally I renamed the analysis text to `text`.
 ```r
 #Rename summary columns name.
 #Use raw string.
@@ -195,6 +196,7 @@ data$text <- data$KNOWLEDGESKILLSABILITIES
 data <- data[, !(colnames(data) %in% join_vec)]
 ```
 #### Text manipulations
+After getting rid of unnessesary columns, some more data cleaning by text manipulation was needed to be applied. One of the biggest issue with this raw data was the formatting strings that indicate special characters. For example, in many columns and the `text` column, apostrophe `'` was represented in hexadecimal form `\xe2\x80\x99s` or other similar representation. These characters had to be removed from the text in order to perform well on text mining process.
 ```r
 #Clean any formatting string with raw string expression.
 data$text<-gsub(r"{\xe2\x80\x99s}", "s", data$text,fixed = TRUE)
@@ -214,6 +216,7 @@ data$JOBFAMILY<-gsub("REPORTS TO.*", "", data$JOBFAMILY)
 
 ### Corpus Preparation and Pre-processing
 #### Volatile Corpus
+After cleaning and text wrangling has been completed, I created a sourced object of the cleaned dataset and transformed the source obeject into a volatile corpus using `tm` package available in R. Turning the dataset into corpus using `tm` library allows for usage of extensive pre-processing and analysis functions provided by `tm` library, which is shown in the next section.
 ```r
 #In R, you can specify that a data text is a corpus type, so tm package can recognize it.
 #Change the prepared data to corpus, for further preprocessing (Stop words, stemming ... etc)
@@ -223,10 +226,11 @@ data_source <- DataframeSource(data)
 corpus <- VCorpus(data_source)
 ```
 #### Corpus Pre-processing
+Here, I performed corpus preprocessing by using the `standardize` function I defined above. A list of additional stopwords I defined were also read in from excel file stored in my local drive. As described in the function description, the function turns every term into lower case, removes numbers, removes punctuations, removes white spaces, and removes stop words. This function can also perform lemmatization of terms in corpus with user defined parameter. Returns a corpus with all specified text standardization applied.
 ```r
 #Standardization
 #Import dictionary of stop words from a file.
-stop_w <- pull(read_excel('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/stopwords.xlsx', col_names=FALSE))
+stop_w <- pull(read_excel('[path]/stopwords.xlsx', col_names=FALSE))
 #Use the program defined function to standardize.
 corpus <- standardize(corpus, lemmatize=TRUE, stop_w)
 ```
