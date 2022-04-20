@@ -1,7 +1,7 @@
 ## Project Overview
 This project was a capstone project for my bachelors of science degree in Business Analytics & Technology at Trinity University. On this project, my project team and I worked with the university human resources department to run a text analysis on job descriptions currently available at the university. More specifically, one of the research question was to find out what kinds of skills are hidden in the job documents and what are the missing skills which are important for specific occupations. 
 
-Here I will present my portion of the script for this project which includes text standardization, analysis, and skills extraction. For this project, I used R to extract skills from job descriptions as it provides with extensive and useful libaries for text analysis.
+Here I will present portion of the script for this project which includes text standardization, analysis, and skills extraction. For this project, I used R to extract skills from job descriptions as it provides with extensive and useful libaries for text analysis.
 
 ## Data Overview
 The data I used in this project was a pre-parsed dataset that includes subheaders of a job descriptions as columns and rows as each indivisual document. Prior to this script, I used python to parse job documents into datasets. The details about how I parsed the job postings and created the dataset is documented in another page - [Job Description Parsing Algorithm](https://github.com/takucnoel-endo/Code-Samples/blob/main/Job%20Description%20Parsing.md). Diagram below is the structure of the dataset that I used for this project.
