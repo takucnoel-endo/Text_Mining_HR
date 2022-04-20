@@ -160,7 +160,7 @@ Match_skills <- function(skill_syn, corp){
 ```
 
 ## Main Script
-### Preliminary operations.
+### Reading Data and Assigning ID
 ```r
 #Read data into R session.
 data <- read_excel('/Users/takucnoelendo/Documents/SP 2022/Consulting/HR Project/Data/Parsed_data.xlsx')
